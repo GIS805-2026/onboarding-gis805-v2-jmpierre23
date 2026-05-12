@@ -4,8 +4,6 @@
 
 Quelles catégories de produits déclinent , dans quelles régions et pourquoi?
 
-hjvgghjvhjghjghgjhjg
-
 ## Réponse exécutive
 
 Les données indiquent que le déclin n’est pas uniforme: il touche surtout certaines catégories dans certaines régions.Ces priorités viennent directement des baisses les plus fortes observées dans les ventes entre le premier semestre 2025 et le deuxième semestre 2025.Ce n’est pas toute l’entreprise qui baisse partout de la même façon. Le problème est concentré dans certaines catégories: Home & Garden, Pet Supplies, Sports & Outdoors, Books & Media, Clothing, Electronics. Les priorités immédiates devraient être Home & Garden en Alberta, Pet Supplies au Québec, et plusieurs catégories en BC, Estrie et Outaouais. Avant de conclure à une baisse de demande, NexaMart devrait vérifier trois causes possibles: retours élevés, ruptures ou faibles niveaux d’inventaire, et écarts entre ventes et budget.
