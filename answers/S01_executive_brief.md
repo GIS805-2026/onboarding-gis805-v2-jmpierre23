@@ -16,6 +16,264 @@ Pour les clients, si leurs informations changent avec le temps, l’idéal serai
 Enfin, cette approche suppose que les données de départ sont assez fiables. Elle permet d’analyser les baisses de ventes avec les retours, l’inventaire et le budget, mais elle ne permet pas à elle seule de prouver exactement la cause de la baisse.
 
 ## Preuve
+Mes requêtes proviennent de ChatGpt
+1)Pour la question , quelles catégories de produits qui déclinent ?
+Les catégories qui déclinent globalement entre le 1er semestre 2025 et le 2e semestre 2025 sont:
+
+Catégorie	Revenu S1 2025	Revenu S2 2025	Baisse	Baisse %
+Books & Media	30 785,15 $	20 060,25 $	-10 724,90 $	-34,8 %
+Grocery	42 780,15 $	36 414,65 $	-6 365,50 $	-14,9 %
+Clothing	10 202,74 $	7 521,81 $	-2 680,93 $	-26,3 %
+Donc, les trois catégories en déclin sont Books & Media, Grocery et Clothing. La plus forte baisse en dollars est Books & Media.
+
+WITH sales_by_half AS (
+    SELECT
+        p.category,
+        CASE
+            WHEN s.order_date < DATE '2025-07-01' THEN 'S1'
+            ELSE 'S2'
+        END AS semestre,
+        SUM(s.line_total) AS revenue,
+        SUM(s.quantity) AS units
+    FROM raw_fact_sales s
+    JOIN raw_dim_product p
+        ON s.product_id = p.product_id
+    WHERE s.order_date BETWEEN DATE '2025-01-01' AND DATE '2025-12-31'
+    GROUP BY
+        p.category,
+        semestre
+),
+category_comparison AS (
+    SELECT
+        category,
+        SUM(CASE WHEN semestre = 'S1' THEN revenue ELSE 0 END) AS revenue_s1,
+        SUM(CASE WHEN semestre = 'S2' THEN revenue ELSE 0 END) AS revenue_s2,
+        SUM(CASE WHEN semestre = 'S1' THEN units ELSE 0 END) AS units_s1,
+        SUM(CASE WHEN semestre = 'S2' THEN units ELSE 0 END) AS units_s2
+    FROM sales_by_half
+    GROUP BY category
+)
+SELECT
+    category,
+    ROUND(revenue_s1, 2) AS revenue_s1,
+    ROUND(revenue_s2, 2) AS revenue_s2,
+    ROUND(revenue_s2 - revenue_s1, 2) AS revenue_change,
+    ROUND(100 * (revenue_s2 - revenue_s1) / NULLIF(revenue_s1, 0), 1) AS pct_change,
+    units_s1,
+    units_s2,
+    units_s2 - units_s1 AS unit_change
+FROM category_comparison
+WHERE revenue_s2 < revenue_s1
+ORDER BY revenue_change ASC;
+
+Pour la question :Dans quelle région les produits déclinent ?
+Les produits déclinent surtout dans ces régions:
+
+Région	Catégorie en déclin	Baisse du revenu	Baisse %
+Ontario	Pet Supplies	-4 787,09 $	-20,2 %
+Ontario	Books & Media	-4 539,15 $	-54,4 %
+Outaouais	Toys & Games	-4 191,06 $	-52,1 %
+Québec	Books & Media	-3 872,83 $	-44,9 %
+BC	Beauty & Health	-2 921,25 $	-41,1 %
+Québec	Grocery	-2 739,33 $	-25,9 %
+BC	Grocery	-2 464,74 $	-39,6 %
+Estrie	Books & Media	-2 304,96 $	-90,0 %
+Québec	Toys & Games	-2 256,61 $	-23,5 %
+Outaouais	Grocery	-1 969,49 $	-34,9 %
+Donc les régions les plus touchées sont Ontario, Québec, Outaouais, BC et Estrie.
+
+La région Ontario ressort fortement parce qu’elle a deux grosses baisses: Pet Supplies et Books & Media.
+
+WITH sales_by_half AS (
+    SELECT
+        p.category,
+        st.region,
+        st.province,
+        CASE
+            WHEN s.order_date < DATE '2025-07-01' THEN 'S1'
+            ELSE 'S2'
+        END AS semestre,
+        SUM(s.line_total) AS revenue,
+        SUM(s.quantity) AS units
+    FROM raw_fact_sales s
+    JOIN raw_dim_product p
+        ON s.product_id = p.product_id
+    JOIN raw_dim_store st
+        ON s.store_id = st.store_id
+    WHERE s.order_date BETWEEN DATE '2025-01-01' AND DATE '2025-12-31'
+    GROUP BY
+        p.category,
+        st.region,
+        st.province,
+        semestre
+),
+region_category_comparison AS (
+    SELECT
+        category,
+        region,
+        province,
+        SUM(CASE WHEN semestre = 'S1' THEN revenue ELSE 0 END) AS revenue_s1,
+        SUM(CASE WHEN semestre = 'S2' THEN revenue ELSE 0 END) AS revenue_s2,
+        SUM(CASE WHEN semestre = 'S1' THEN units ELSE 0 END) AS units_s1,
+        SUM(CASE WHEN semestre = 'S2' THEN units ELSE 0 END) AS units_s2
+    FROM sales_by_half
+    GROUP BY
+        category,
+        region,
+        province
+)
+SELECT
+    category,
+    region,
+    province,
+    ROUND(revenue_s1, 2) AS revenue_s1,
+    ROUND(revenue_s2, 2) AS revenue_s2,
+    ROUND(revenue_s2 - revenue_s1, 2) AS revenue_change,
+    ROUND(100 * (revenue_s2 - revenue_s1) / NULLIF(revenue_s1, 0), 1) AS pct_change,
+    units_s1,
+    units_s2,
+    units_s2 - units_s1 AS unit_change
+FROM region_category_comparison
+WHERE revenue_s2 < revenue_s1
+ORDER BY revenue_change ASC;
+
+Pour la question : Pourquoi le déclin de ces produits dans les régions concernées ?
+Le déclin semble venir surtout de trois causes possibles: baisse du volume vendu, retours élevés, et parfois problème de stock ou de livraison.
+
+Catégorie	Région	Pourquoi le déclin semble arriver
+Pet Supplies	Ontario	Les unités vendues baissent de 144 à 115. En plus, les retours sont élevés: environ 21,5 % du revenu S2, surtout pour la raison changed_mind.
+Books & Media	Ontario	Forte baisse des unités: 64 à 29. Le problème semble surtout être une chute de demande ou de volume, avec quelques retours liés à damaged_shipping.
+Toys & Games	Outaouais	Les unités passent de 70 à 33. Les retours sont aussi élevés, environ 18,7 %, avec la raison principale defective.
+Books & Media	Québec	Les unités passent de 68 à 36. Les retours existent, surtout damaged_shipping, mais la cause principale semble être la baisse du volume vendu.
+Beauty & Health	BC	Les unités passent de 73 à 43. Les retours sont faibles, donc le problème semble plutôt lié à une baisse de demande ou d’achalandage.
+Grocery	Québec	Les unités passent de 127 à 94. Les retours sont assez élevés, environ 15,7 %, surtout defective.
+Grocery	BC	Les unités passent de 75 à 46. Les retours sont faibles, donc la baisse semble surtout venir du volume vendu.
+Books & Media	Estrie	Chute très forte: 20 unités à seulement 2. Ici, le signal principal est une perte presque complète de volume.
+Clothing	Ontario	Les unités passent de 93 à 51. Les retours sont très élevés, environ 24,9 %, surtout changed_mind.
+Sports & Outdoors	Ontario	Les unités baissent de 100 à 81. Le taux de faible stock est élevé, environ 22,2 %, donc l’inventaire pourrait avoir limité les ventes.
+En résumé:
+Le déclin n’a pas une seule cause. Pour Books & Media, Beauty & Health et une partie de Grocery, c’est surtout une baisse du volume vendu. Pour Pet Supplies, Toys & Games, Grocery Québec et Clothing Ontario, les retours aggravent clairement la baisse. Pour Sports & Outdoors Ontario, le signal à vérifier est plutôt l’inventaire faible.
+
+WITH sales_by_half AS (
+    SELECT
+        p.category,
+        st.region,
+        st.province,
+        CASE
+            WHEN s.order_date < DATE '2025-07-01' THEN 'S1'
+            ELSE 'S2'
+        END AS semestre,
+        SUM(s.line_total) AS revenue,
+        SUM(s.quantity) AS units,
+        AVG(s.discount_pct) AS avg_discount
+    FROM raw_fact_sales s
+    JOIN raw_dim_product p
+        ON s.product_id = p.product_id
+    JOIN raw_dim_store st
+        ON s.store_id = st.store_id
+    WHERE s.order_date BETWEEN DATE '2025-01-01' AND DATE '2025-12-31'
+    GROUP BY
+        p.category,
+        st.region,
+        st.province,
+        semestre
+),
+declining_categories AS (
+    SELECT
+        category,
+        region,
+        province,
+        SUM(CASE WHEN semestre = 'S1' THEN revenue ELSE 0 END) AS revenue_s1,
+        SUM(CASE WHEN semestre = 'S2' THEN revenue ELSE 0 END) AS revenue_s2,
+        SUM(CASE WHEN semestre = 'S1' THEN units ELSE 0 END) AS units_s1,
+        SUM(CASE WHEN semestre = 'S2' THEN units ELSE 0 END) AS units_s2,
+        AVG(CASE WHEN semestre = 'S1' THEN avg_discount END) AS discount_s1,
+        AVG(CASE WHEN semestre = 'S2' THEN avg_discount END) AS discount_s2
+    FROM sales_by_half
+    GROUP BY
+        category,
+        region,
+        province
+    HAVING
+        SUM(CASE WHEN semestre = 'S2' THEN revenue ELSE 0 END)
+        <
+        SUM(CASE WHEN semestre = 'S1' THEN revenue ELSE 0 END)
+),
+returns_s2 AS (
+    SELECT
+        p.category,
+        st.region,
+        st.province,
+        SUM(r.refund_amount) AS refund_amount_s2,
+        SUM(r.return_quantity) AS return_units_s2,
+        COUNT(*) AS return_lines_s2,
+        MODE(r.return_reason) AS main_return_reason
+    FROM raw_fact_returns r
+    JOIN raw_dim_product p
+        ON r.product_id = p.product_id
+    JOIN raw_dim_store st
+        ON r.store_id = st.store_id
+    WHERE r.return_date BETWEEN DATE '2025-07-01' AND DATE '2025-12-31'
+    GROUP BY
+        p.category,
+        st.region,
+        st.province
+),
+inventory_s2 AS (
+    SELECT
+        p.category,
+        st.region,
+        st.province,
+        AVG(
+            CASE
+                WHEN i.quantity_on_hand <= i.reorder_point THEN 1.0
+                ELSE 0.0
+            END
+        ) AS low_stock_rate_s2
+    FROM raw_fact_inventory_snapshot i
+    JOIN raw_dim_product p
+        ON i.product_id = p.product_id
+    JOIN raw_dim_store st
+        ON i.store_id = st.store_id
+    WHERE i.snapshot_date BETWEEN DATE '2025-07-01' AND DATE '2025-12-31'
+    GROUP BY
+        p.category,
+        st.region,
+        st.province
+)
+SELECT
+    d.category,
+    d.region,
+    d.province,
+
+    ROUND(d.revenue_s1, 2) AS revenue_s1,
+    ROUND(d.revenue_s2, 2) AS revenue_s2,
+    ROUND(d.revenue_s2 - d.revenue_s1, 2) AS revenue_change,
+    ROUND(100 * (d.revenue_s2 - d.revenue_s1) / NULLIF(d.revenue_s1, 0), 1) AS pct_change,
+
+    d.units_s1,
+    d.units_s2,
+    d.units_s2 - d.units_s1 AS unit_change,
+
+    ROUND(100 * COALESCE(r.refund_amount_s2, 0) / NULLIF(d.revenue_s2, 0), 1) AS refund_rate_pct,
+    COALESCE(r.main_return_reason, '-') AS main_return_reason,
+
+    ROUND(100 * COALESCE(i.low_stock_rate_s2, 0), 1) AS low_stock_pct,
+
+    ROUND(d.discount_s1 * 100, 1) AS discount_s1_pct,
+    ROUND(d.discount_s2 * 100, 1) AS discount_s2_pct
+
+FROM declining_categories d
+LEFT JOIN returns_s2 r
+    ON d.category = r.category
+   AND d.region = r.region
+   AND d.province = r.province
+LEFT JOIN inventory_s2 i
+    ON d.category = i.category
+   AND d.region = i.region
+   AND d.province = i.province
+ORDER BY
+    revenue_change ASC;
 
 Mes requêtes proviennent de code space et du codex Github de ChatGPT car j'avais dépassé mes limites sur le github de code space. Veuillez trouver certaines sql et les recherches effectuées
 2026-05-10 — Séance S02
@@ -408,3 +666,6 @@ En gros, la base NexaMart donne de bons indices pour commencer l’analyse, mais
 
 NexaMart devrait d’abord se concentrer sur les produits et les régions où les ventes ont le plus baissé. Il faut aussi vérifier ce qui pourrait expliquer ces baisses à l’interne, comme les problèmes d’inventaire, les retours de produits, la qualité des produits ou la performance de certaines régions.
 Les données permettent de voir où il y a des problèmes, mais elles ne prouvent pas encore exactement pourquoi ces problèmes arrivent. Avant de prendre une grosse décision stratégique, il faut donc terminer le modèle de données et ajouter d’autres informations, par exemple des données externes comme le marché, la concurrence ou les tendances économiques.
+Make generate
+make load
+make check
