@@ -1,6 +1,6 @@
 # Board Brief — S01
 
-## Question du CEO - - okvkvvklvskljsdklj
+## Question du CEO
 
 Quelles catégories de produits déclinent , dans quelles régions et pourquoi?
 
@@ -16,14 +16,15 @@ Pour les clients, si leurs informations changent avec le temps, l’idéal serai
 Enfin, cette approche suppose que les données de départ sont assez fiables. Elle permet d’analyser les baisses de ventes avec les retours, l’inventaire et le budget, mais elle ne permet pas à elle seule de prouver exactement la cause de la baisse.
 
 ## Preuve
+
 Mes requêtes proviennent de ChatGpt
 1)Pour la question , quelles catégories de produits qui déclinent ?
 Les catégories qui déclinent globalement entre le 1er semestre 2025 et le 2e semestre 2025 sont:
 
-Catégorie	Revenu S1 2025	Revenu S2 2025	Baisse	Baisse %
-Books & Media	30 785,15 $	20 060,25 $	-10 724,90 $	-34,8 %
-Grocery	42 780,15 $	36 414,65 $	-6 365,50 $	-14,9 %
-Clothing	10 202,74 $	7 521,81 $	-2 680,93 $	-26,3 %
+Catégorie Revenu S1 2025 Revenu S2 2025 Baisse Baisse %
+Books & Media 30 785,15 $ 20 060,25 $ -10 724,90 $ -34,8 %
+Grocery 42 780,15 $ 36 414,65 $ -6 365,50 $ -14,9 %
+Clothing 10 202,74 $ 7 521,81 $ -2 680,93 $ -26,3 %
 Donc, les trois catégories en déclin sont Books & Media, Grocery et Clothing. La plus forte baisse en dollars est Books & Media.
 
 WITH sales_by_half AS (
@@ -69,17 +70,17 @@ ORDER BY revenue_change ASC;
 Pour la question :Dans quelle région les produits déclinent ?
 Les produits déclinent surtout dans ces régions:
 
-Région	Catégorie en déclin	Baisse du revenu	Baisse %
-Ontario	Pet Supplies	-4 787,09 $	-20,2 %
-Ontario	Books & Media	-4 539,15 $	-54,4 %
-Outaouais	Toys & Games	-4 191,06 $	-52,1 %
-Québec	Books & Media	-3 872,83 $	-44,9 %
-BC	Beauty & Health	-2 921,25 $	-41,1 %
-Québec	Grocery	-2 739,33 $	-25,9 %
-BC	Grocery	-2 464,74 $	-39,6 %
-Estrie	Books & Media	-2 304,96 $	-90,0 %
-Québec	Toys & Games	-2 256,61 $	-23,5 %
-Outaouais	Grocery	-1 969,49 $	-34,9 %
+Région Catégorie en déclin Baisse du revenu Baisse %
+Ontario Pet Supplies -4 787,09 $ -20,2 %
+Ontario Books & Media -4 539,15 $ -54,4 %
+Outaouais Toys & Games -4 191,06 $ -52,1 %
+Québec Books & Media -3 872,83 $ -44,9 %
+BC Beauty & Health -2 921,25 $ -41,1 %
+Québec Grocery -2 739,33 $ -25,9 %
+BC Grocery -2 464,74 $ -39,6 %
+Estrie Books & Media -2 304,96 $ -90,0 %
+Québec Toys & Games -2 256,61 $ -23,5 %
+Outaouais Grocery -1 969,49 $ -34,9 %
 Donc les régions les plus touchées sont Ontario, Québec, Outaouais, BC et Estrie.
 
 La région Ontario ressort fortement parce qu’elle a deux grosses baisses: Pet Supplies et Books & Media.
@@ -140,17 +141,17 @@ ORDER BY revenue_change ASC;
 Pour la question : Pourquoi le déclin de ces produits dans les régions concernées ?
 Le déclin semble venir surtout de trois causes possibles: baisse du volume vendu, retours élevés, et parfois problème de stock ou de livraison.
 
-Catégorie	Région	Pourquoi le déclin semble arriver
-Pet Supplies	Ontario	Les unités vendues baissent de 144 à 115. En plus, les retours sont élevés: environ 21,5 % du revenu S2, surtout pour la raison changed_mind.
-Books & Media	Ontario	Forte baisse des unités: 64 à 29. Le problème semble surtout être une chute de demande ou de volume, avec quelques retours liés à damaged_shipping.
-Toys & Games	Outaouais	Les unités passent de 70 à 33. Les retours sont aussi élevés, environ 18,7 %, avec la raison principale defective.
-Books & Media	Québec	Les unités passent de 68 à 36. Les retours existent, surtout damaged_shipping, mais la cause principale semble être la baisse du volume vendu.
-Beauty & Health	BC	Les unités passent de 73 à 43. Les retours sont faibles, donc le problème semble plutôt lié à une baisse de demande ou d’achalandage.
-Grocery	Québec	Les unités passent de 127 à 94. Les retours sont assez élevés, environ 15,7 %, surtout defective.
-Grocery	BC	Les unités passent de 75 à 46. Les retours sont faibles, donc la baisse semble surtout venir du volume vendu.
-Books & Media	Estrie	Chute très forte: 20 unités à seulement 2. Ici, le signal principal est une perte presque complète de volume.
-Clothing	Ontario	Les unités passent de 93 à 51. Les retours sont très élevés, environ 24,9 %, surtout changed_mind.
-Sports & Outdoors	Ontario	Les unités baissent de 100 à 81. Le taux de faible stock est élevé, environ 22,2 %, donc l’inventaire pourrait avoir limité les ventes.
+Catégorie Région Pourquoi le déclin semble arriver
+Pet Supplies Ontario Les unités vendues baissent de 144 à 115. En plus, les retours sont élevés: environ 21,5 % du revenu S2, surtout pour la raison changed_mind.
+Books & Media Ontario Forte baisse des unités: 64 à 29. Le problème semble surtout être une chute de demande ou de volume, avec quelques retours liés à damaged_shipping.
+Toys & Games Outaouais Les unités passent de 70 à 33. Les retours sont aussi élevés, environ 18,7 %, avec la raison principale defective.
+Books & Media Québec Les unités passent de 68 à 36. Les retours existent, surtout damaged_shipping, mais la cause principale semble être la baisse du volume vendu.
+Beauty & Health BC Les unités passent de 73 à 43. Les retours sont faibles, donc le problème semble plutôt lié à une baisse de demande ou d’achalandage.
+Grocery Québec Les unités passent de 127 à 94. Les retours sont assez élevés, environ 15,7 %, surtout defective.
+Grocery BC Les unités passent de 75 à 46. Les retours sont faibles, donc la baisse semble surtout venir du volume vendu.
+Books & Media Estrie Chute très forte: 20 unités à seulement 2. Ici, le signal principal est une perte presque complète de volume.
+Clothing Ontario Les unités passent de 93 à 51. Les retours sont très élevés, environ 24,9 %, surtout changed_mind.
+Sports & Outdoors Ontario Les unités baissent de 100 à 81. Le taux de faible stock est élevé, environ 22,2 %, donc l’inventaire pourrait avoir limité les ventes.
 En résumé:
 Le déclin n’a pas une seule cause. Pour Books & Media, Beauty & Health et une partie de Grocery, c’est surtout une baisse du volume vendu. Pour Pet Supplies, Toys & Games, Grocery Québec et Clothing Ontario, les retours aggravent clairement la baisse. Pour Sports & Outdoors Ontario, le signal à vérifier est plutôt l’inventaire faible.
 
