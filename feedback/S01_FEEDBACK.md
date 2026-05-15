@@ -1,8 +1,10 @@
 # Rétroaction automatisée -- S01 (Diagnostic fondamental -- NexaMart kickoff)
 
-_Générée le 2026-05-14T22:27:03+00:00 -- Run `20260514T221333Z-7d34bf6a`_
+_Générée le 2026-05-15T12:40:20+00:00 -- Run `20260515T122624Z-00a5a04f`_
 
 Ce document est produit par un pipeline reproductible (vérification SQL déterministe + analyse LLM du brief et de la déclaration IA). Une revue humaine précède toujours sa publication. **À ce stade expérimental, aucune note ni étiquette de niveau n'est diffusée : l'objectif est purement formatif.**
+
+> ⚠️ **Avertissement instructeur (à retirer avant publication) :** cette analyse a été générée avec `--skip-pull`. Le contenu correspond au commit local et **n'est peut-être pas la dernière version poussée par l'étudiant·e**.
 
 ---
 
@@ -142,67 +144,59 @@ ORDER BY
 
 **Pistes :**
 > Requête extraite par LLM (aucun bloc fencé détecté). Encadrez votre requête finale par ```sql ... ``` pour éliminer toute ambiguïté.
-> Votre `db/nexamart.duckdb` est absente ou vide ; la requête a été exécutée contre une **base de référence cohorte** (seed instructeur). Les chiffres retournés ne correspondent donc pas à vos propres données : reconstruisez votre base avec `python src/run_pipeline.py` (ou `.\run.ps1 load`) pour valider vos calculs sur votre seed personnel.
 > Tables référencées dans votre requête mais absentes de la base : `declining_categories`, `inventory_s2`, `returns_s2`, `sales_by_half`.
 > Tables disponibles dans `db/nexamart.duckdb` : `raw_bridge_campaign_allocation`, `raw_bridge_customer_segment`, `raw_customer_changes`, `raw_customer_profile_bands`, `raw_customer_scd3_history`, `raw_dim_channel`, `raw_dim_customer`, `raw_dim_date`, `raw_dim_geography`, `raw_dim_product`, `raw_dim_segment_outrigger`, `raw_dim_store`, `raw_fact_budget`, `raw_fact_daily_inventory`, `raw_fact_inventory_snapshot`, `raw_fact_order_pipeline`, `raw_fact_orders_transaction`, `raw_fact_promo_exposure`, `raw_fact_returns`, `raw_fact_sales`.
 
 ## 2. Rétroaction pédagogique sur le brief
 
-> Bon diagnostic opérationnel : l'étudiant a identifié les catégories et régions prioritaires et a réalisé de nombreuses vérifications sur les tables brutes. Il reste à formaliser le modèle (SCD, grain, DDL), à publier des checks reproductibles et à condenser le brief en une décision claire pour le CEO.
+> Bon diagnostic opérationnel : le brief identifie catégories et régions en déclin, fournit SQL de validation et propose pistes d'investigation pertinentes. Pour monter au niveau 'excellent', formalisez le modèle (SCD, patterns Kimball), publiez un trace git reproductible et synthétisez une recommandation board claire et actionnable.
 
 ### Observations par dimension
 
 **Model quality**
-- Observation : On va créer une table principale, fact_sales, où chaque ligne représente une vente.
-- Piste d'amélioration : Préciser le grain formel (clé composite), documenter explicitement le choix SCD (type) pour chaque dimension et noter les attributs non-additifs (ex. unit_price) avec exemples de DDL.
+- Observation : L'étudiant précise le grain (« chaque ligne représente une vente »), propose fact_sales et les dimensions produit/magasin/client/canal/date et explique l'usage des mesures quantité, rabais et montant total.
+- Piste d'amélioration : Formaliser le pattern SCD attendu (ex. SCD Type 2 sur dim_product) et expliciter les choix de bridge/junk si pertinents (ex. customer segment bridge) pour corriger les risques historiques mentionnés.
 
 **Validation quality**
-- Observation : J’ai commencé par vérifier que la base contenait bien toutes les tables nécessaires. La base contient 24 tables et aucune table principale n’est vide.
-- Piste d'amélioration : Fournir les sorties exactes des contrôles (make check) : requêtes exécutées, résultats numériques et traitement des cas limites (NULLs, divisions par zéro, vérification du grain).
+- Observation : Le brief contient des requêtes SQL de validation, une réconciliation des totaux (2 577 ventes, 543 904,80 $) et des contrôles sur retours et inventaire.
+- Piste d'amélioration : Ajouter des checks explicites pour les cas limites (NULLs, divisions par zéro via NULLIF, vérification d'unicité du grain) et fournir les résultats d'exécution systématiques (outputs de make check).
 
 **Executive justification**
-- Observation : Les priorités immédiates devraient être Home & Garden en Alberta, Pet Supplies au Québec, et plusieurs catégories en BC, Estrie et Outaouais.
-- Piste d'amélioration : Rédiger une version condensée (150–300 mots) avec une recommandation décisionnelle claire (ex. actions prioritaires, KPI à surveiller, impact attendu) et chiffrée si possible.
+- Observation : La section ‘Réponse exécutive’ identifie catégories et régions prioritaires (ex. Home & Garden Alberta, Pet Supplies Québec) et recommande d'investiguer retours, ruptures et écarts budget/ventes.
+- Piste d'amélioration : Rendre la recommandation au CEO plus décisionnelle et synthétique (p.ex. trois actions concrètes et prioritaires avec impact attendu et ETA), en réduisant le jargon technique.
 
 **Process trace**
-- Observation : La base DuckDB existe maintenant ici: db/nexamart.duckdb ... winget install Python.Python.3.12 ... j’ai fait: .\.venv\Scripts\python.exe -m pip install -r requirements.txt ...
-- Piste d'amélioration : Ajouter un log git (≥3 commits) avec messages significatifs, et une note IA formelle (outil utilisé, prompt résumé, validation humaine) dans le decision log.
+- Observation : L'étudiant décrit des actions locales (installation Python, génération de la DB, logs d'activité) et mentionne l'usage de ChatGPT mais n'inclut pas d'historique git avec commits détaillés.
+- Piste d'amélioration : Publier un historique git clair (≥3 commits incrémentaux avec messages) et une note IA formelle précisant quel prompt/outil a produit quelles parties, plus la validation humaine.
 
 **Reproducibility**
-- Observation : La base DuckDB existe maintenant ici: db/nexamart.duckdb et j’ai exécuté les commandes d’installation et de génération listées (winget, pip, gen_all.py, run_pipeline.py).
-- Piste d'amélioration : Fournir un README reproductible : commandes exactes sans chemins codés en dur, exigences d'environnement, et un script check.sh/make check qui permet de recréer la DB en <5 min sur une machine propre.
-
-_Quelques points appellent une attention particulière lors de la prochaine itération : ia_tool_declared._
+- Observation : L'auteur décrit les commandes utilisées (gen_all.py, run_pipeline) et affirme avoir créé db/nexamart.duckdb mais signale des étapes manuelles et des chemins locaux.
+- Piste d'amélioration : Fournir un README minimal reproductible (clone → commandes exactes make generate/load/check) sans chemins codés en dur et avec un script d'initialisation automatisé.
 
 ## 3. Déclaration d'utilisation de l'IA
 
-> La déclaration est très détaillée sur les étapes d'utilisation de l'IA, les validations humaines et les limites observées. En revanche, elle reste générique sur l'outil (nom sans version/modèle) — précise la version ou le modèle utilisé pour atteindre la note maximale.
+> La déclaration est détaillée et documente les interactions, les étapes et les validations humaines. Toutefois l'information sur l'outil reste incomplète (nom donné sans version/modèle précis), ce qui rend la déclaration partiellement générique.
 
 **Sujets bien couverts dans votre déclaration :**
 
+- outils utilisés (nom + version/modèle)
 - à quelle étape l'IA a été utilisée
 - comment la sortie a été validée par l'humain
 - limites ou erreurs observées
 
-**Sujets à ajouter ou expliciter pour la prochaine itération :**
-
-- outils utilisés (nom + version/modèle)
-
 ## 4. Pistes d'action pour la prochaine itération
 
 - Reprendre la requête de la section « Preuve » pour qu'elle s'exécute sur `db/nexamart.duckdb` et qu'elle produise la forme attendue (voir pistes en section 1).
-- Réviser le brief en tenant compte des observations par dimension de la section 2.
-- Compléter `ai-usage.md` en y ajoutant : outils utilisés (nom + version/modèle).
 
 ---
 
 ## 5. Traçabilité
 
-- **Run ID :** `20260514T221333Z-7d34bf6a`
+- **Run ID :** `20260515T122624Z-00a5a04f`
 - **Devoir :** `S01`
 - **Étudiant·e :** `jmpierre23`
-- **Commit analysé :** `306dd0a`
-- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260514T221333Z-7d34bf6a/jmpierre23/`
+- **Commit analysé :** `8e53c74`
+- **Audit (côté instructeur) :** `tools/instructor/feedback_pipeline/audit/20260515T122624Z-00a5a04f/jmpierre23/`
 - **Prompts (SHA-256) :**
   - `sql_extractor_system` : `90ee9e277de7a27f...`
   - `rubric_grader_system` : `505f32d1d8319d66...`
